@@ -68,7 +68,7 @@ public class LogService {
 		if (dir.exists() && dir.isDirectory()) {
 			File[] logFiles = dir.listFiles();
 
-			if (logFiles.length > 0) {
+			if (logFiles != null && logFiles.length > 0) {
 				for (File logFile : logFiles) {
 					if (pattern.matcher(logFile.getName()).find()) {
 						try {
@@ -119,14 +119,12 @@ public class LogService {
 	public void archiveLogFile(String logFileName) throws LogFileArchiveException, LogFileCreationException {
 		String archiveDirectory = logDirectory + "/archive";
 		createLogDirectory(archiveDirectory);
-
-		String fileName = logFileName;
-		Path sourcePath = Paths.get(fileName);
-		String zipFileName = archiveDirectory + File.separator + fileName + ".zip";
+		
+		String zipFileName = archiveDirectory + File.separator + logFileName + ".zip";
 
 		try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFileName))) {
 			// Get all log files in the directory
-			DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(archiveDirectory), "*.log");
+			try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(logDirectory), "*.log")) {
 
 			for (Path entry : stream) {
 				// Add each log file to the ZIP file
@@ -143,6 +141,7 @@ public class LogService {
 				} catch (IOException e) {
 					throw new LogFileArchiveException("Failed to add file to ZIP: " + entry.getFileName());
 				}
+			}
 			}
 			System.out.println("Log files archived successfully to: " + zipFileName);
 		} catch (IOException e) {
