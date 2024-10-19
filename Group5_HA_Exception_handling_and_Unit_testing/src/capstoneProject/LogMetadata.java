@@ -42,7 +42,7 @@ public LogMetadata(String EachDayOfEachChargingStation, String equipmentName, St
 
 }
 
-
+//Hello
 
 
 
