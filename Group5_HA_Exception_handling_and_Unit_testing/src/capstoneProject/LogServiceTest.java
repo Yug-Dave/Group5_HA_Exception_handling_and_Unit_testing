@@ -1,11 +1,18 @@
 package capstoneProject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.*;
 
+
+import java.io.File;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Comparator;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import capstoneProject.exceptions.LogFileCreationException;
 import capstoneProject.exceptions.LogFileDoesNotExistException;
@@ -13,67 +20,96 @@ import capstoneProject.exceptions.LogFileReadException;
 import capstoneProject.exceptions.LogNotFoundException;
 
 public class LogServiceTest {
-	private LogService logService;
+    private static final String LOG_DIRECTORY = "temp-logs";
+    private LogService logService;
 
-	LogServiceTest() throws LogFileCreationException {
-		this.logService = new LogService("temp-logs");
-	}
+    @Before
+    public void setUp() throws LogFileCreationException {
+        // Initialize LogService with a test log directory
+        logService = new LogService(LOG_DIRECTORY);
+        try {
+      Files.createDirectories(Paths.get(LOG_DIRECTORY));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }  // Create the test directory
+    }
 
-	@Test
-	public void testCreateLogFile()
-			throws LogFileCreationException, LogFileReadException, LogFileDoesNotExistException, LogNotFoundException {
+    @After
+    public void tearDown() {
+        // Cleanup: Delete the test directory after each test
+      try {
+            Files.walk(Paths.get(LOG_DIRECTORY))
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-		final String EQUIPMENT_NAME = "random-eName";
-		final LogMetadata logMetadata = new LogMetadata("eachDay", EQUIPMENT_NAME, "eSource");
+  @Test
+  public void testCreateLogFile()
+      throws LogFileCreationException, LogFileReadException, LogFileDoesNotExistException, LogNotFoundException {
 
-		this.logService.createLogFile(logMetadata, "random-content-here");
-		List<String> equipments = this.logService.getLogFilesByEquipment(EQUIPMENT_NAME);
+    final String EQUIPMENT_NAME = "random-eName";
+    final LogMetadata logMetadata = new LogMetadata("eachDay", EQUIPMENT_NAME, "eSource");
 
-		assertTrue(equipments.contains(logMetadata.getLogFileName()));
-	}
+    this.logService.createLogFile(logMetadata, "random-content-here");
+    List<String> equipments = this.logService.getLogFilesByEquipment(EQUIPMENT_NAME);
 
-	@Test
-	public void testCreateLogFileException() {
-		LogMetadata logMetadata = new LogMetadata("eachDay", "/../../../../../../../../../eName", "eSource");
-		try {
-			this.logService.createLogFile(logMetadata, "random-content-here");
-		} catch (Exception e) {
-			assertEquals(e.getClass(), LogFileCreationException.class);
-		}
-	}
+    assertTrue(equipments.contains(logMetadata.getLogFileName()));
+  }
 
-	@Test
-	public void testCreateArchiveLogFileException() {
-		final String LOG_FILE_ARCHIVE_NAME = "/../../../../../../../../random-archive-file-name";
-		try {
-			this.logService.archiveLogFile(LOG_FILE_ARCHIVE_NAME);
-		} catch (Exception e) {
-			assertEquals(e.getClass(), LogFileCreationException.class);
-		}
-	}
+  @Test
+  public void testCreateLogFileException() {
+    LogMetadata logMetadata = new LogMetadata("eachDay", "/../../../../../../../../../eName", "eSource");
+    try {
+      this.logService.createLogFile(logMetadata, "random-content-here");
+    } catch (LogFileCreationException e) {
+      assertEquals(e.getClass(), LogFileCreationException.class);
+     } catch (Exception e) {
+      assertEquals(e.getClass(), LogFileCreationException.class);
+    }
+  }
 
-	@Test
-	public void testDeleteLogException() {
+  @Test
+  public void testCreateArchiveLogFileException() {
+    final String LOG_FILE_ARCHIVE_NAME = "/../../../../../../../../random-archive-file-name";
+    try {
+      this.logService.archiveLogFile(LOG_FILE_ARCHIVE_NAME);
+    } catch (LogFileCreationException e) {
+      assertEquals(e.getClass(), LogFileCreationException.class);
+    } catch (Exception e) {
+      assertEquals(e.getClass(), LogFileCreationException.class);
+    }
+  }
 
-		final String NOT_EXIST_LOG_FILE_NAME = "random-log-file-name";
+  @Test
+  public void testDeleteLogException() {
 
-		try {
-			this.logService.deleteLogFile(NOT_EXIST_LOG_FILE_NAME);
-		} catch (Exception e) {
-			assertEquals(e.getClass(), LogFileDoesNotExistException.class);
-		}
-	}
+    final String NOT_EXIST_LOG_FILE_NAME = "random-log-file-name";
 
-	@Test
-	public void testListEmptyLogEquipmentException() {
+    try {
+      this.logService.deleteLogFile(NOT_EXIST_LOG_FILE_NAME);
+    } catch (LogFileDoesNotExistException e) {
+      assertEquals(e.getClass(), LogFileDoesNotExistException.class);
+    } catch (Exception e) {
+      assertEquals(e.getClass(), LogFileDoesNotExistException.class);
+    }
+  }
 
-		final String NO_EXIST_LOG_FILE_NAME = "random-log-file-name";
+  @Test
+  public void testListEmptyLogEquipmentException() {
 
-		try {
-			this.logService.getLogFilesByEquipment(NO_EXIST_LOG_FILE_NAME);
-		} catch (Exception e) {
-			assertEquals(e.getClass(), LogNotFoundException.class);
-		}
-	}
+    final String NO_EXIST_LOG_FILE_NAME = "random-log-file-name";
+
+    try {
+      this.logService.getLogFilesByEquipment(NO_EXIST_LOG_FILE_NAME);
+    } catch (LogNotFoundException e) {
+      assertEquals(e.getClass(), LogNotFoundException.class);
+    } catch (Exception e) {
+      assertEquals(e.getClass(), LogNotFoundException.class);
+    }
+  }
 
 }
