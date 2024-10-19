@@ -1,5 +1,6 @@
 package capstoneProject.exceptions;
 
+import java.io.IOException;
 
 public class LogFileDoesNotExistException extends Exception {
 
@@ -11,5 +12,10 @@ public class LogFileDoesNotExistException extends Exception {
 
 	public LogFileDoesNotExistException(String reason) {
 		super(reason);
+	}
+
+	public LogFileDoesNotExistException(String string, IOException e) {
+		// TODO Auto-generated constructor stub
+		super(string);
 	}
 }
